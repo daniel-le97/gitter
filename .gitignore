@@ -1,0 +1,30 @@
+# Ignore build artifacts
+zig-out/
+
+# Ignore temporary files
+*.o
+*.bin
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Ignore editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore dependency directories (if any)
+.zig-cache/
+zig-out/
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+*.bak
+*.lock
+
+# Ignore system files
+.DS_Store
+Thumbs.db
