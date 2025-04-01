@@ -1,6 +1,7 @@
-# Gitter
+# Gitter  WIP
 
 Gitter is a command-line tool written in Zig that helps you find Git repositories on your file system. It recursively searches directories and identifies Git repositories, optionally extracting their names from GitHub URLs.
+
 
 ## Features
 
