@@ -82,33 +82,16 @@ fn getGitHubRepoName(config_path: []const u8) ![]const u8 {
     const size = try reader.readAll(buffer[0..]);
 
     const content = buffer[0..size];
-    var lines = std.mem.splitAny(u8, content, "\n");
+    var lines = std.mem.splitAny(u8, content, "\n"); // Specify the type `u8` as the first argument
     const remoteOriginPrefix = "\turl = ";
-    
+
     // Look for the remote.origin.url line
     while (lines.next()) |line| {
-        const has = std.mem.count(u8, line, remoteOriginPrefix);
-        // std.debug.print("url: {}\n", .{has});
-        if (has == 1) {
-            // var url = std.mem.
-            // std.debug.print("url: {s}\n", .{line});
-            std.debug.print("url: {s}\n", .{line[remoteOriginPrefix.len..]});
-            return line[remoteOriginPrefix.len..];
-        }
-
         if (std.mem.startsWith(u8, line, remoteOriginPrefix)) {
-            // const url = line[6..]; // Skip "url = "
-            // std.debug.print("url: {s}\n", .{line[remoteOriginPrefix.len..]});
-            // Extract the repo name from the URL
-
-            // if (std.mem.count(u8, url, "github.com") >= 1) {
-            //     const parts = std.mem.splitAny(u8,url, "/");
-            //     if (parts.buffer >= "2") {
-            //         return parts[parts.len - 1][0..std.mem.indexOf(u8, parts[parts.len - 1], ".git") orelse parts[parts.len - 1].len];
-            //     }
-            // }
+            const url = line[remoteOriginPrefix.len..];
+            return url;
         }
     }
 
-    return error.InvalidGitConfig;
+    return "not published on GitHub";
 }
