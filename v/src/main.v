@@ -51,6 +51,9 @@ fn main() {
 	mut repos := []Repo{}
 
 	os.walk(os.home_dir(), fn (path string) {
+		if path.starts_with(os.home_dir() + "/.") {
+			return
+		}
 		if path.ends_with('/.git/config') {
 			files(path)
 		}
