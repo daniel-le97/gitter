@@ -54,6 +54,9 @@ fn main() {
 		if path.starts_with(os.home_dir() + "/.") {
 			return
 		}
+		if path.starts_with(os.home_dir() + "/Library/") {
+			return
+		}
 		if path.ends_with('/.git/config') {
 			files(path)
 		}
@@ -82,7 +85,7 @@ fn main() {
 		}
 	}
 
-	
+
 
 	println(repos.len)
 	println(timer.elapsed())

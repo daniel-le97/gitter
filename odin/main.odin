@@ -48,6 +48,14 @@ find_git_configs :: proc(path: string) {
 				// Skip hidden directories
 				continue
 			}
+			if ODIN_OS_STRING == "darwin" {
+				library_path := strings.concatenate([]string{home, "/Library"})
+				if strings.starts_with(entry.fullpath, library_path) {
+					// Skip private directories
+					continue
+				}
+			}
+			
 			find_git_configs(entry.fullpath) // Recurse into subdirectories
 		} else if entry.name == "config" && strings.ends_with(entry.fullpath, "/.git/config") {
 			// fmt.printf("Found .git/config: %s\n", entry.fullpath)
@@ -83,6 +91,7 @@ main :: proc() {
 	}
 
 	fmt.printf("Searching for .git/config files in %s...\n", home)
+	// fmt.printfln(ODIN_OS_STRING)
 	find_git_configs(home)
 	for repo, i in repos {
 		fmt.println(i+1, "-", repo.path)
