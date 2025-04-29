@@ -26,5 +26,5 @@ zig-out/
 *.lock
 
 # Ignore system files
-.DS_Store
+*.DS_Store
 Thumbs.db

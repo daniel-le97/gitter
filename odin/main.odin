@@ -55,15 +55,14 @@ find_git_configs :: proc(path: string) {
 					continue
 				}
 			}
-			
+
 			find_git_configs(entry.fullpath) // Recurse into subdirectories
 		} else if entry.name == "config" && strings.ends_with(entry.fullpath, "/.git/config") {
 			// fmt.printf("Found .git/config: %s\n", entry.fullpath)
 			content, err := os.read_entire_file(entry.fullpath)
-         if !err {
-            fmt.printf("Error reading file %s: %v\n", entry.fullpath, err)
-    
-         }  
+			if !err {
+				fmt.printf("Error reading file %s: %v\n", entry.fullpath, err)
+			}
 
 			content_str := string(content)
 			content_str_lines := strings.split(content_str, "\n")
@@ -94,7 +93,7 @@ main :: proc() {
 	// fmt.printfln(ODIN_OS_STRING)
 	find_git_configs(home)
 	for repo, i in repos {
-		fmt.println(i+1, "-", repo.path)
+		fmt.println(i + 1, "-", repo.path)
 		fmt.println("\t", repo.url)
 	}
 	elapsed := time.stopwatch_duration(stopwatch)

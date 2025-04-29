@@ -1,47 +1,31 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) !void {
-    // const target = b.standardTargetOptions(.{});
-    // const optimize = b.standardOptimizeOption(.{});
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
 
-    // const lib_mod = b.createModule(.{
-    //     .root_source_file = b.path("src/root.zig"),
-    //     .target = target,
-    //     .optimize = optimize,
-    // });
+    const exe_mod = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize
+    });
 
-    // const exe_mod = b.createModule(.{
-    //     .root_source_file = b.path("src/main.zig"),
-    //     .target = target,
-    //     .optimize = optimize,
-    // });
+    const exe = b.addExecutable(.{
+        .name = "gitter",
+        .root_module = exe_mod,
+    });
 
-    // exe_mod.addImport("foo_lib", lib_mod);
+    b.installArtifact(exe);
 
-    // const lib = b.addLibrary(.{
-    //     .linkage = .static,
-    //     .name = "foo",
-    //     .root_module = lib_mod,
-    // });
+    const run_cmd = b.addRunArtifact(exe);
+    run_cmd.step.dependOn(b.getInstallStep());
 
-    // b.installArtifact(lib);
+    if (b.args) |args| {
+        run_cmd.addArgs(args);
+    }
 
-    // const exe = b.addExecutable(.{
-    //     .name = "foo",
-    //     .root_module = exe_mod,
-    // });
-
-    // b.installArtifact(exe);
-
-    // const run_cmd = b.addRunArtifact(exe);
-    // run_cmd.step.dependOn(b.getInstallStep());
-
-    // if (b.args) |args| {
-    //     run_cmd.addArgs(args);
-    // }
-
-    // const run_step = b.step("run", "Run the app");
-    // run_step.dependOn(&run_cmd.step);
+    const run_step = b.step("run", "Run the app");
+    run_step.dependOn(&run_cmd.step);
 
     // const lib_unit_tests = b.addTest(.{
     //     .root_module = lib_mod,
@@ -60,30 +44,30 @@ pub fn build(b: *std.Build) !void {
     // test_step.dependOn(&run_exe_unit_tests.step);
 
     // Add multi-target builds for major platforms
-    const targets: []const std.Target.Query = &.{
-    .{ .cpu_arch = .aarch64, .os_tag = .macos },
-    .{ .cpu_arch = .aarch64, .os_tag = .linux },
-    .{ .cpu_arch = .x86_64, .os_tag = .linux, .abi = .gnu },
-    .{ .cpu_arch = .x86_64, .os_tag = .linux, .abi = .musl },
-    .{ .cpu_arch = .x86_64, .os_tag = .windows },
-};
+    //     const targets: []const std.Target.Query = &.{
+    //     .{ .cpu_arch = .aarch64, .os_tag = .macos },
+    //     .{ .cpu_arch = .aarch64, .os_tag = .linux },
+    //     .{ .cpu_arch = .x86_64, .os_tag = .linux, .abi = .gnu },
+    //     .{ .cpu_arch = .x86_64, .os_tag = .linux, .abi = .musl },
+    //     .{ .cpu_arch = .x86_64, .os_tag = .windows },
+    // };
 
- for (targets) |t| {
-        const exe = b.addExecutable(.{
-            .name = "hello",
-            .root_source_file = b.path("src/main.zig"),
-            .target = b.resolveTargetQuery(t),
-            .optimize = .ReleaseSafe,
-        });
+    //  for (targets) |t| {
+    //         const exe = b.addExecutable(.{
+    //             .name = "gitter",
+    //             .root_source_file = b.path("src/main.zig"),
+    //             .target = b.resolveTargetQuery(t),
+    //             .optimize = .ReleaseFast,
+    //         });
 
-        const target_output = b.addInstallArtifact(exe, .{
-            .dest_dir = .{
-                .override = .{
-                    .custom = try t.zigTriple(b.allocator),
-                },
-            },
-        });
+    //         const target_output = b.addInstallArtifact(exe, .{
+    //             .dest_dir = .{
+    //                 .override = .{
+    //                     .custom = try t.zigTriple(b.allocator),
+    //                 },
+    //             },
+    //         });
 
-        b.getInstallStep().dependOn(&target_output.step);
-    }
+    //         b.getInstallStep().dependOn(&target_output.step);
+    //     }
 }

@@ -1,80 +1,90 @@
 const std = @import("std");
 
-pub fn main() !void {
-    // Get allocator
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer _ = gpa.deinit();
+var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+const allocator = arena.allocator();
 
-    // Parse args into string array
+const Repo = struct { path: []const u8, url: []const u8 };
+var repos = std.ArrayList(Repo).init(allocator);
+
+pub fn main() !void {
+    const time = std.time.milliTimestamp();
+    defer arena.deinit();
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
+    var env = try std.process.getEnvMap(allocator);
+    defer env.deinit();
 
-    if (args.len < 2) {
-        std.debug.print("Usage: {s} <command> [options]\n", .{args[0]});
-        return;
-    }
+    const home_dir = env.get("HOME") orelse env.get("USERPROFILE") orelse "~/";
+    const dot_files = try std.mem.concat(allocator, u8, &.{ home_dir, "/." });
+    const lib_files = try std.mem.concat(allocator, u8, &.{ home_dir, "/Library" });
+    std.debug.print("args: {d}\n", .{args.len});
 
-    const command = args[1];
-    if (std.mem.eql(u8, command, "greet")) {
-        if (args.len < 3) {
-            std.debug.print("Usage: {s} greet <name>\n", .{args[0]});
-            return;
+    if (args.len > 1) {
+        const command = args[1];
+        if (std.mem.eql(u8, command, "")) {
+            try findGitRepos(home_dir, &.{ dot_files, lib_files });
+        } else {
+            try findGitRepos(command, &.{ dot_files, lib_files });
         }
-        const name = args[2];
-        std.debug.print("Hello, {s}!\n", .{name});
-    } else if (std.mem.eql(u8, command, "help")) {
-        std.debug.print("Available commands:\n", .{});
-        std.debug.print("  greet <name>  - Greet the specified name\n", .{});
-        std.debug.print("  git-repos --dir <path> - List all Git repositories in the specified directory\n", .{});
-        std.debug.print("  help          - Show this help message\n", .{});
-    } else if (std.mem.eql(u8, command, "git-repos")) {
-        if (args.len < 4 or !std.mem.eql(u8, args[2], "--dir")) {
-            std.debug.print("Usage: {s} git-repos --dir <path>\n", .{args[0]});
-            return;
-        }
-        const dir_path = args[3];
-        try findGitRepos(dir_path);
-        std.debug.print("finished\n", .{});
     } else {
-        std.debug.print("Unknown command: {s}\n", .{command});
-        std.debug.print("Use '{s} help' to see available commands.\n", .{args[0]});
+        // Fallback to home_dir if no command is provided
+        try findGitRepos(home_dir, &.{ dot_files, lib_files });
     }
+    std.debug.print("Git repositories found: {d}\n", .{repos.items.len});
+    std.debug.print("Elapsed: {d} ms\n", .{std.time.milliTimestamp() - time});
 }
 
-fn findGitRepos(dir_path: []const u8) !void {
-    var stdout = std.io.getStdOut().writer();
-
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator(); // Use the allocator() method
-
-    var fs = std.fs.cwd();
-    const dir = try fs.openDir(dir_path, .{ .iterate = true });
+fn findGitRepos(dir_path: []const u8, filters: *const [2][]const u8) !void {
+    var dir = try std.fs.openDirAbsolute(dir_path, .{ .iterate = true });
+    defer dir.close();
 
     var it = dir.iterate();
     while (try it.next()) |entry| {
+        if (entry.kind != .directory) {
+            continue;
+        }
         const full_path = try std.fs.path.join(allocator, &.{ dir_path, entry.name });
+        if (std.mem.startsWith(u8, full_path, filters[0])) {
+            continue;
+        }
+        if (std.mem.startsWith(u8, full_path, filters[1])) {
+            continue;
+        }
         defer allocator.free(full_path);
 
         if (entry.kind == .directory) {
             if (std.mem.eql(u8, entry.name, ".git")) {
-                try stdout.print("Git repository found: {s}\n", .{dir_path});
+                std.debug.print("Git repository found: {s}\n", .{dir_path});
+                // try paths.append(dir_path);
                 const config_path = try std.fs.path.join(allocator, &.{ full_path, "config" });
+
                 defer allocator.free(config_path);
 
                 const repo_name = try getGitHubRepoName(config_path);
-                try stdout.print("GitHub repository found: {s}\n", .{repo_name});
+                try repos.append(Repo{ .path = full_path, .url = repo_name });
+                std.debug.print("GitHub URL found: {s}\n", .{repo_name});
             } else {
                 // Recursively walk subdirectories
-                try findGitRepos(full_path);
+                try findGitRepos(full_path, filters);
             }
         }
     }
 }
 
 fn getGitHubRepoName(config_path: []const u8) ![]const u8 {
-    var file = try std.fs.cwd().openFile(config_path, .{});
+    var file = std.fs.cwd().openFile(config_path, .{}) catch |e|
+        switch (e) {
+            error.PathAlreadyExists => {
+                std.log.info("already exists", .{});
+                return "already exists";
+            },
+            error.FileNotFound => {
+                std.log.info("file not found", .{});
+                return "file not found";
+            },
+            else => return "file not found",
+        };
+
     defer file.close();
 
     var reader = file.reader();

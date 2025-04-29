@@ -1,0 +1,14 @@
+.DS_Store
+.vscode/
+*.swp
+*.swo
+*.tmp
+*.bak
+*.log
+*.lock
+*.o
+*.bin
+*.exe
+*.dll
+*.so
+*.dylib

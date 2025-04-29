@@ -1,7 +1,6 @@
 module main
 
 import os
-
 import time
 
 struct Repo {
@@ -30,31 +29,29 @@ fn get_git_user() string {
 	return cmd.output
 }
 
-
 const files = file_adder()
 
 const user = get_git_user()
 
-
 struct App {
-	mut:
-		files []string
-		repos []Repo
-		user  string
+mut:
+	files []string
+	repos []Repo
+	user  string
 }
 
-
-
 fn main() {
-
 	timer := time.new_stopwatch()
 	mut repos := []Repo{}
 
 	os.walk(os.home_dir(), fn (path string) {
-		if path.starts_with(os.home_dir() + "/.") {
+		if path.starts_with(os.home_dir() + '/.') {
 			return
 		}
-		if path.starts_with(os.home_dir() + "/Library/") {
+		if path.starts_with(os.home_dir() + '/Library/') {
+			return
+		}
+		if path.starts_with(os.home_dir() + '/go/') {
 			return
 		}
 		if path.ends_with('/.git/config') {
@@ -77,16 +74,12 @@ fn main() {
 					remote_url = remote
 				}
 			}
-
 		}
 		repos << Repo{
 			path: file.all_before('/.git/config')
 			url:  remote_url
 		}
 	}
-
-
-
 	println(repos.len)
 	println(timer.elapsed())
 }
