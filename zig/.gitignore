@@ -28,3 +28,4 @@ zig-out/
 # Ignore system files
 *.DS_Store
 Thumbs.db
+repos.txt
