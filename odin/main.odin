@@ -92,10 +92,10 @@ main :: proc() {
 	fmt.printf("Searching for .git/config files in %s...\n", home)
 	// fmt.printfln(ODIN_OS_STRING)
 	find_git_configs(home)
-	for repo, i in repos {
-		fmt.println(i + 1, "-", repo.path)
-		fmt.println("\t", repo.url)
-	}
+	// for repo, i in repos {
+	// 	fmt.println(i + 1, "-", repo.path)
+	// 	fmt.println("\t", repo.url)
+	// }
 	elapsed := time.stopwatch_duration(stopwatch)
 	fmt.printf("Elapsed time: %v\n", elapsed)
 }
