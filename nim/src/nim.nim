@@ -39,12 +39,12 @@ proc readDirectoryRecursively(path: string): seq[Repo] =
 proc main() =
   let startTime = cpuTime()
   let home = getEnv("HOME")
-  let ok = home & "/."
+  let ok = home & "/homelab"
   let skipDirs = @[home & "/.", home & "/Library"]
   echo "Searching for .git/config files in ", ok
   # findGitRepos(home, skipDirs)
 
-  let repos = readDirectoryRecursively(home)
+  let repos = readDirectoryRecursively(ok)
   for index, repo in repos :
       echo index, ". ", repo.path
       echo " - ", repo.url

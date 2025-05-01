@@ -84,18 +84,19 @@ main :: proc() {
 	stopwatch := time.Stopwatch{}
 	time.stopwatch_start(&stopwatch)
 	home := os.get_env("HOME")
+	path := strings.concatenate([]string{home, "/homelab"})
 	if home == "" {
 		fmt.printf("HOME environment variable is not set.\n")
 		return
 	}
 
-	fmt.printf("Searching for .git/config files in %s...\n", home)
+	fmt.printf("Searching for .git/config files in %s...\n", path)
 	// fmt.printfln(ODIN_OS_STRING)
-	find_git_configs(home)
-	// for repo, i in repos {
-	// 	fmt.println(i + 1, "-", repo.path)
-	// 	fmt.println("\t", repo.url)
-	// }
+	find_git_configs(path)
+	for repo, i in repos {
+		fmt.println(i + 1, "-", repo.path)
+		fmt.println("\t", repo.url)
+	}
 	elapsed := time.stopwatch_duration(stopwatch)
 	fmt.printf("Elapsed time: %v\n", elapsed)
 }

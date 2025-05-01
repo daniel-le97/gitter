@@ -72,6 +72,7 @@ func (scanner *GitScanner) scanDirectory() []GitRepo {
 	}
 
 	// Walk the directory tree and send directories to the channel
+	
 	err := filepath.Walk(scanner.RootDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			fmt.Printf("Error accessing path %s: %v\n", path, err)

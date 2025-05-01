@@ -12,3 +12,9 @@
 *.dll
 *.so
 *.dylib
+
+/js
+/python
+
+script.zig
+script

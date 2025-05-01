@@ -1,0 +1,13 @@
+name: crystal
+version: 0.1.0
+
+authors:
+  - daniel-le97 <107774403+daniel-le97@users.noreply.github.com>
+
+targets:
+  crystal:
+    main: src/crystal.cr
+
+crystal: '>= 1.16.1'
+
+license: MIT

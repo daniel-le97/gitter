@@ -43,17 +43,22 @@ mut:
 fn main() {
 	timer := time.new_stopwatch()
 	mut repos := []Repo{}
+	path := if os.args.len > 1 {
+		os.args[1]
+	} else {
+		os.home_dir()
+	}
 
-	os.walk(os.home_dir(), fn (path string) {
-		if path.starts_with(os.home_dir() + '/.') {
-			return
-		}
-		if path.starts_with(os.home_dir() + '/Library/') {
-			return
-		}
-		if path.starts_with(os.home_dir() + '/go/') {
-			return
-		}
+	os.walk(path, fn (path string) {
+		// if path.starts_with(os.home_dir() + '/.') {
+		// 	return
+		// }
+		// if path.starts_with(os.home_dir() + '/Library/') {
+		// 	return
+		// }
+		// if path.starts_with(os.home_dir() + '/go/') {
+		// 	return
+		// }
 		if path.ends_with('/.git/config') {
 			files(path)
 		}
