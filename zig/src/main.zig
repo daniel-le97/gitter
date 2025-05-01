@@ -1,7 +1,10 @@
 const std = @import("std");
 
-var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-const allocator = arena.allocator();
+var gpu = std.heap.GeneralPurposeAllocator(.{}){};
+const allocator = gpu.allocator();
+
+// var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+// const allocator = arena.allocator();
 
 const Repo = struct { path: []const u8, url: []const u8 };
 var repos = std.ArrayList(Repo).init(allocator);
@@ -9,7 +12,14 @@ var filters_array = std.ArrayList([]u8).init(allocator);
 
 pub fn main() !void {
     const start_time = std.time.milliTimestamp();
-    defer arena.deinit();
+    defer {
+        filters_array.deinit(); // This frees all items in the array
+        repos.deinit(); // This frees all items in the repos array
+        const deinit_status = gpu.deinit();
+
+        // we should never leak memory otherwise we have a bug
+        if (deinit_status == .leak) std.debug.assert(true);
+    }
 
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
@@ -17,7 +27,8 @@ pub fn main() !void {
     var env = try std.process.getEnvMap(allocator);
     defer env.deinit();
 
-    const home_dir = env.get("HOME") orelse env.get("USERPROFILE") orelse "~/";
+    const home_dir = env.get("HOME") orelse env.get("USERPROFILE").?;
+    std.debug.assert(home_dir > 0);
 
     const dot_filter = try std.fs.path.join(allocator, &.{ home_dir, "." });
     const library_filter = try std.fs.path.join(allocator, &.{ home_dir, "Library" });
@@ -27,11 +38,8 @@ pub fn main() !void {
     try filters_array.append(go_filter);
     defer {
         allocator.free(go_filter);
-        allocator.free(home_dir);
         allocator.free(dot_filter);
         allocator.free(library_filter);
-        filters_array.deinit();
-        repos.deinit();
     }
 
     const search_dir = if (args.len > 1 and !std.mem.eql(u8, args[1], "")) args[1] else home_dir;
