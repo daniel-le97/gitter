@@ -3,7 +3,7 @@ import "core:fmt"
 import "core:os"
 import "core:strings"
 import "core:time"
-
+import "core:mem/virtual"
 import "base:runtime"
 
 // variables

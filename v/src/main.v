@@ -9,82 +9,52 @@ mut:
 	url  string
 }
 
-fn file_adder() fn (path string) []string {
-	mut files_ := []string{}
-	func := fn [mut files_] (path string) []string {
-		if path == '' {
-			return files_
-		}
-		files_ << path
-		return files_
-	}
-	return func
-}
 
-fn get_git_user() string {
-	cmd := os.execute('git config --global user.name')
-	if cmd.exit_code != 0 {
+fn get_remote_url(path string) string {
+	content := os.read_file(path) or {
+		println('Error reading file: ${err}')
 		return ''
 	}
-	return cmd.output
-}
-
-const files = file_adder()
-
-const user = get_git_user()
-
-struct App {
-mut:
-	files []string
-	repos []Repo
-	user  string
+	mut remote_url := 'none'
+	for line in content.split_into_lines() {
+		if line.contains('\turl =') {
+			remote := line.all_after('\turl = ')
+			if remote != '' {
+				remote_url = remote
+			}
+		}
+	}
+	return remote_url
 }
 
 fn main() {
 	timer := time.new_stopwatch()
-	mut repos := []Repo{}
+	mut repos := &[]Repo{}
+
 	path := if os.args.len > 1 {
 		os.args[1]
 	} else {
 		os.home_dir()
 	}
 
-	os.walk(path, fn (path string) {
-		// if path.starts_with(os.home_dir() + '/.') {
-		// 	return
-		// }
-		// if path.starts_with(os.home_dir() + '/Library/') {
-		// 	return
-		// }
-		// if path.starts_with(os.home_dir() + '/go/') {
-		// 	return
-		// }
-		if path.ends_with('/.git/config') {
-			files(path)
-		}
-	})
 
-	for file in files('') {
-		println(file)
-		lines := os.read_lines(file) or {
-			println('Error reading file: ${err}')
-			return
-		}
-		mut remote_url := 'none'
-		for line in lines {
-			if line.contains('\turl =') {
-				// println(line)
-				remote := line.all_after('\turl = ')
-				if remote != '' {
-					remote_url = remote
-				}
-			}
-		}
-		repos << Repo{
-			path: file.all_before('/.git/config')
-			url:  remote_url
+	handler := fn [mut repos]( path string) {
+		if path.ends_with('/.git/config') {
+			repos << Repo{
+				path: path.all_before('/.git/config')
+				url:  get_remote_url(path)
+			}	
 		}
 	}
+
+	os.walk(path, handler)
+
+
+	for repo in repos {
+		println('Path: ${repo.path}')
+		println('URL: ${repo.url}')
+	}
+
 	println(repos.len)
 	println(timer.elapsed())
 }
