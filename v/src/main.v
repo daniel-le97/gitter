@@ -9,7 +9,6 @@ mut:
 	url  string
 }
 
-
 fn get_remote_url(path string) string {
 	content := os.read_file(path) or {
 		println('Error reading file: ${err}')
@@ -27,28 +26,37 @@ fn get_remote_url(path string) string {
 	return remote_url
 }
 
+fn get_walk_path() !string {
+	if os.args.len < 1 {
+		return error('please provide a path to search for git repositories')
+	}
+	walk_path := os.args[1]
+	if !os.exists(walk_path) {
+		return error('${walk_path} does not exist')
+	}
+	if !os.is_dir(walk_path) {
+		return error('${walk_path} is not a directory')
+	}
+	return walk_path
+}
+
 fn main() {
 	timer := time.new_stopwatch()
+	//
 	mut repos := &[]Repo{}
 
-	path := if os.args.len > 1 {
-		os.args[1]
-	} else {
-		os.home_dir()
-	}
-
-
-	handler := fn [mut repos]( path string) {
+	walk_path := get_walk_path() or { panic(err) }
+	
+	handler := fn [mut repos] (path string) {
 		if path.ends_with('/.git/config') {
 			repos << Repo{
 				path: path.all_before('/.git/config')
 				url:  get_remote_url(path)
-			}	
+			}
 		}
 	}
 
-	os.walk(path, handler)
-
+	os.walk(walk_path, handler)
 
 	for repo in repos {
 		println('Path: ${repo.path}')
